@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-# tbta
-=======
 # EUROPACE Token-Based Todo App
 
 This mono-repo contains two containerized microservices:
@@ -67,11 +64,40 @@ curl --location 'localhost:8081/register' \
 "password": "admin"
 }'
 ```
+! This user already exists !
 
+### Login
+```
+curl --location 'localhost:8081/login' \
+--header 'Content-Type: application/json' \
+--data '{
+  "username": "admin",
+  "password": "admin"
+}'
+```
 
+### Verify Token
+```
+curl --location 'localhost:8081/token' \
+--header 'Content-Type: application/json' \
+--data '{"token": "dXNlcjphZG1pbg=="}'
+```
+
+### Add a Todo
+```
+curl --location 'localhost:8082/todos' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer dXNlcjphZG1pbg==' \
+--data '{"todo": "be awesome!"}'
+```
+
+### Get Todos
+```
+curl --location 'localhost:8082/todos' \
+--header 'Authorization: Bearer dXNlcjphZG1pbg=='
+```
 
 ## Dependencies
 - The root project has minimal dependencies, only what is required for Gradle and subproject management.
 - Each service manages its own dependencies in its own `build.gradle`.
 
->>>>>>> master
