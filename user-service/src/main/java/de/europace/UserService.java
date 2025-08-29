@@ -3,7 +3,6 @@ package de.europace;
 import org.springframework.stereotype.Service;
 
 import java.util.Base64;
-import java.util.Map;
 
 @Service
 public class UserService {
