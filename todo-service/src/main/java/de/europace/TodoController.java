@@ -6,15 +6,18 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
 public class TodoController {
-    private final Map<String, List<String>> todos = new ConcurrentHashMap<>();
+    private final TodoService todoService;
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Value("${USER_SERVICE_URL:http://localhost:8081}")
     private String userServiceUrl;
+
+    public TodoController(TodoService todoService) {
+        this.todoService = todoService;
+    }
 
     private String getUsernameFromToken(String token) {
         try {
@@ -42,10 +45,10 @@ public class TodoController {
             return ResponseEntity.status(401).body("Invalid token");
         }
         String todo = body.get("todo");
-        if (todo == null) {
+        if (todo == null || todo.isEmpty()) {
             return ResponseEntity.badRequest().body("Missing todo");
         }
-        todos.computeIfAbsent(username, k -> new ArrayList<>()).add(todo);
+        todoService.addTodo(username, todo);
         return ResponseEntity.ok("Todo added");
     }
 
@@ -59,7 +62,7 @@ public class TodoController {
         if (username == null) {
             return ResponseEntity.status(401).body("Invalid token");
         }
-        List<String> userTodos = todos.getOrDefault(username, Collections.emptyList());
+        List<String> userTodos = todoService.getTodos(username);
         return ResponseEntity.ok(Map.of("todos", userTodos));
     }
 }

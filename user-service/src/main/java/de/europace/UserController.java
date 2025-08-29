@@ -3,29 +3,23 @@ package de.europace;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Base64;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
 public class UserController {
-    private final Map<String, String> users = new ConcurrentHashMap<>();
+    private final UserService userService;
 
-    public UserController() {
-        users.put("admin", "admin"); // Default user
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Map<String, String> body) {
         String username = body.get("username");
         String password = body.get("password");
-        if (username == null || password == null) {
-            return ResponseEntity.badRequest().body("Missing username or password");
+        if (!userService.register(username, password)) {
+            return ResponseEntity.status(409).body("User already exists or invalid input");
         }
-        if (users.containsKey(username)) {
-            return ResponseEntity.status(409).body("User already exists");
-        }
-        users.put(username, password);
         return ResponseEntity.ok("User registered");
     }
 
@@ -33,34 +27,20 @@ public class UserController {
     public ResponseEntity<?> login(@RequestBody Map<String, String> body) {
         String username = body.get("username");
         String password = body.get("password");
-        if (username == null || password == null) {
-            return ResponseEntity.badRequest().body("Missing username or password");
+        String token = userService.login(username, password);
+        if (token == null) {
+            return ResponseEntity.status(401).body("Invalid credentials or missing input");
         }
-        if (!password.equals(users.get(username))) {
-            return ResponseEntity.status(401).body("Invalid credentials");
-        }
-        String token = Base64.getEncoder().encodeToString(("user:" + username).getBytes());
         return ResponseEntity.ok(Map.of("token", token));
     }
 
     @PostMapping("/token")
     public ResponseEntity<?> verifyToken(@RequestBody Map<String, String> body) {
         String token = body.get("token");
-        if (token == null) {
-            return ResponseEntity.badRequest().body("Missing token");
-        }
-        try {
-            String decoded = new String(Base64.getDecoder().decode(token));
-            if (!decoded.startsWith("user:")) {
-                return ResponseEntity.status(401).body("Invalid token");
-            }
-            String username = decoded.substring(5);
-            if (!users.containsKey(username)) {
-                return ResponseEntity.status(401).body("Invalid token");
-            }
-            return ResponseEntity.ok(Map.of("username", username));
-        } catch (Exception e) {
+        String username = userService.verifyToken(token);
+        if (username == null) {
             return ResponseEntity.status(401).body("Invalid token");
         }
+        return ResponseEntity.ok(Map.of("username", username));
     }
 }
