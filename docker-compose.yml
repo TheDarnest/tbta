@@ -1,0 +1,17 @@
+version: '3.8'
+services:
+  user-service:
+    build: ./user-service
+    ports:
+      - "8081:8081"
+    container_name: user-service
+  todo-service:
+    build: ./todo-service
+    ports:
+      - "8082:8082"
+    container_name: todo-service
+    environment:
+      USER_SERVICE_URL: http://user-service:8081
+    depends_on:
+      - user-service
+
