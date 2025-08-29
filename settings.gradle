@@ -1,0 +1,2 @@
+rootProject.name = 'Europace-Token-Based-Todo-App'
+include 'user-service', 'todo-service'
